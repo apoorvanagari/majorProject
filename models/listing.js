@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
+const { reviewSchema } = require("../schema");
 const Schema = mongoose.Schema;
+const Review = require("./reviews.js");
+const { required } = require("joi");
 
 const listingSchema = new Schema({
     title : {
@@ -9,11 +12,10 @@ const listingSchema = new Schema({
     description : {
         type : String,
     },
-    image : {
-        type : String,
-        default : "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGhvbWV8ZW58MHx8MHx8fDA%3D",
-        set: (v) => v==="" ? "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGhvbWV8ZW58MHx8MHx8fDA%3D": v,
-    },
+    image : [{
+        url : String,
+        filename: String,
+    }],
     price : {
         type : Number,
     },
@@ -27,9 +29,40 @@ const listingSchema = new Schema({
     reviews:[{
         type: Schema.Types.ObjectId,
         ref : "Review"
-    }]
+    }],
+
+    owner :{
+        type:Schema.Types.ObjectId,
+        ref :"User"
+    },
+
+    geometry :{
+        type:{
+            type: String,
+            enum: ['Point'],
+            required: true
+        },
+        coordinates :{
+            type:[Number],
+            required:true
+        }
+    },
+
+    category:{
+        type: String,
+        enum: [
+        "islands", "rooms", "iconic-cities", "mountains", "castles",
+        "amazing-pools", "camping", "farms", "arctic-pools", "domes", "boats"
+        ],
+        required: true
+    }
 });
 
+listingSchema.post("findOneAndDelete" , async (listing) => { //listing is sent when the originsl list is deleted
+    if(listing){
+        await Review.deleteMany({_id : {$in : listing.reviews}});
+    }
+})
 const Listing = mongoose.model("Listing",listingSchema);
 
 module.exports = Listing;

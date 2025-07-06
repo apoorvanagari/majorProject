@@ -1,14 +1,26 @@
+if(process.env.NODE_ENV != "production") {
+require("dotenv").config();
+}
+
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
+
 const port = 8080;
-const Listing = require("./models/listing.js")
 const path = require("path");
 const methodOverride = require('method-override')
 const ejsMate = require("ejs-mate");
-const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
-const {listingSchema} = require("./schema.js");
+
+const listingRouter = require("./routes/listing.js");
+const reviewRouter = require("./routes/review.js");
+const userRouter = require("./routes/user.js");
+
+const session = require("express-session");
+const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user.js");
 
 app.use(methodOverride("_method"));
 app.set("view engine","ejs");
@@ -28,79 +40,47 @@ main().then(() => {
     console.log(err);
 })
 
-const validateListing = (req,res,next) => {
-    const result = listingSchema.validate(req.body);
-
-    if(result.error){
-        const errMsg = result.error.details.map((el) => el.message).join(",");
-        console.log(errMsg);
-        throw new ExpressError(404 , errMsg);
-    }else{
-        next();
+const sessionOptions = {
+    secret : "mysupersecretcode",
+    resave : false,
+    saveUninitialized : true,
+    cookie:{
+        expires : Date.now() + 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly : true
     }
-};
+}
 
-app.get("/",(req , res) => {
-    res.send("Welcome to our new project!");
+app.use(session(sessionOptions));
+app.use(flash());
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+app.use((req,res,next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    res.locals.currUser = req.user; //curr logged in user
+
+    next(); //donot forget or else well be stuck here
 });
 
-app.get("/listings",wrapAsync(async (req , res) => {
-    let allListings = await Listing.find({});
-    res.render("listings/index.ejs",{allListings});
-}));
+// app.get("/demouser" , async(req,res) => {
+//     let fakeUser = new User({
+//         email : "student@gmail.com",
+//         username : "delta-student"
+//     });
 
+//     let registeredUser = await User.register(fakeUser , "helloworld");
+//     res.send(registeredUser);
+// });
 
-// new route
-// keep it before :id . If we dont then it takes new as id
-app.get("/listings/new",(req , res) => {
-    res.render("listings/new.ejs");
-});
-
-app.post("/listings",validateListing , wrapAsync(async (req,res,next) => {
-    //go near hopscotch and directly check for http://localhost:8080/listings with post request - undefined will go because nothing gets entered
-    //so through hopscotch empty or fault data can be entered
-
-    // if(!req.body.listing){
-    //     return next(new ExpressError(400 , "The body is undefined"));
-    // }
-
-    
-    const newListing = new Listing(req.body.listing); //js object hence new
-    
-    // if(!newListing.description){
-    //    return next(new ExpressError(400 , "Enter description")); //simillarly for all fields, but this method is tedious
-    // }
-    await newListing.save();
-    res.redirect("/listings");
-}));
-
-//edit route
-app.get("/listings/:id/edit", wrapAsync(async (req,res) => {
-    let {id} = req.params;
-    let listing = await Listing.findById(id);
-    res.render("listings/edit.ejs",{listing});
-}));
-
-app.put("/listings/:id",validateListing,wrapAsync(async(req,res) => {
-    let {id} = req.params;
-    await Listing.findByIdAndUpdate(id ,{...req.body.listing});
-    res.redirect(`/listings/${id}`);
-}));
-
-app.get("/listings/:id",wrapAsync(async (req,res,next)=>{
-    let {id} = req.params;
-    let listing = await Listing.findById(id);
-    res.render("listings/show.ejs",{listing});
-    
-}));
-
-app.delete("/listings/:id",wrapAsync(async(req,res) => {
-    let {id} = req.params;
-    let deletedListing = await Listing.findByIdAndDelete(id);
-    console.log(deletedListing);
-    res.redirect("/listings");
-}));
-
+app.use("/listings" ,listingRouter);
+app.use("/listings/:id/reviews" , reviewRouter);
+app.use("/",userRouter);
 
 // app.get("/Listing",async(req,res)=>{
 //     let sampleListing= new Listing({
@@ -112,6 +92,11 @@ app.delete("/listings/:id",wrapAsync(async(req,res) => {
 //     await sampleListing.save();
 //     res.send("saved to db"); 
 // })
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 app.all("*" , (req,res,next) => {
     next(new ExpressError(404 , "Page doesn't exist"));
