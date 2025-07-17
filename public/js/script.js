@@ -20,7 +20,7 @@
 
 const textarea = document.getElementById("textarea");
 const charcount = document.getElementById("charcount");
-const maxLength = textarea.getAttribute("maxLength")
+const maxLength = textarea.getAttribute("maxlength");
 
 textarea.addEventListener("input" , () => {
 const remaining = maxLength - textarea.value.length;

@@ -118,7 +118,7 @@ module.exports.categoryListing = async(req,res) => {
     const {category} = req.params;
     try{
         let listings = await Listing.find({category});
-        res.render("listings/category.ejs" , {listings});
+        res.render("listings/category.ejs" , {listings , category});
     }
     catch(err){
         console.log(err);
@@ -128,12 +128,14 @@ module.exports.categoryListing = async(req,res) => {
 
 module.exports.countryListing = async(req,res) => {
     const {country} = req.params;
-    try{
         let listings = await Listing.find({ country: { $regex: new RegExp(`^${country}$`, "i") } });
-        res.render("listings/country.ejs" , {listings});
+         if(listings.length > 0){
+            //console.log(listings)
+        res.render("listings/country.ejs" , {listings , country});
+         }
+        else {
+        req.flash("error","Sorry. We donot have listings for requested country");
+        res.redirect("/listings");
+        }
     }
-    catch(err){
-        console.log(err);
-        res.send("wait");
-    }
-}
+
