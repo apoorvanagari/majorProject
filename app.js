@@ -6,7 +6,7 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 const path = require("path");
 const methodOverride = require('method-override')
 const ejsMate = require("ejs-mate");
@@ -29,25 +29,21 @@ app.use(express.urlencoded({extended:true}));
 app.set("views",path.join(__dirname,"views"));
 app.use(express.static(path.join(__dirname,"/public")));
 //const mongo_url = process.env.MONGO_URL;
-const mongo_url = process.env.MONGO_URL || "mongodb+srv://wanderlust:wanderlust@cluster0.xu7sill.mongodb.net/wanderlust?retryWrites=true&w=majority&appName=Cluster0";
-console.log("MongoDB URL loaded:", mongo_url ? "✓" : "✗");
+const mongo_url = process.env.MONGO_URL;
 
-mongoose.connect(mongo_url, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch((err) => console.error("MongoDB connection error:", err));
+async function main() {
+  try {
+    await mongoose.connect(mongo_url, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("MongoDB connected");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+  }
+}
 
-// async function main(){
-//    await mongoose.connect(mongo_url);
-// }
-
-// main().then(() => {
-//     console.log("connection successful to db");
-// }).catch((err) => {
-//     console.log(err);
-// })
+main();
 
 const sessionOptions = {
     secret : "mysupersecretcode",
