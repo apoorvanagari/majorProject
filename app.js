@@ -28,7 +28,7 @@ app.engine("ejs", ejsMate);
 app.use(express.urlencoded({extended:true}));
 app.set("views",path.join(__dirname,"views"));
 app.use(express.static(path.join(__dirname,"/public")));
-const mongo_url = "mongodb://127.0.0.1:27017/wanderlust";
+const mongo_url = process.env.MONGO_URL;
 
 async function main(){
    await mongoose.connect(mongo_url);
