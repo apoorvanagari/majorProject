@@ -28,7 +28,9 @@ app.engine("ejs", ejsMate);
 app.use(express.urlencoded({extended:true}));
 app.set("views",path.join(__dirname,"views"));
 app.use(express.static(path.join(__dirname,"/public")));
-const mongo_url = process.env.MONGO_URL;
+//const mongo_url = process.env.MONGO_URL;
+const mongo_url = process.env.MONGO_URL || "mongodb+srv://wanderlust:wanderlust@cluster0.xu7sill.mongodb.net/wanderlust?retryWrites=true&w=majority&appName=Cluster0";
+console.log("MongoDB URL loaded:", mongo_url ? "✓" : "✗");
 
 mongoose.connect(mongo_url, {
   useNewUrlParser: true,
