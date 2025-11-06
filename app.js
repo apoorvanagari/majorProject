@@ -6,7 +6,7 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 
-const port = 8080;
+const PORT = process.env.PORT || 8080;
 const path = require("path");
 const methodOverride = require('method-override')
 const ejsMate = require("ejs-mate");
@@ -117,6 +117,6 @@ app.use((err,req,res,next) => {
     //next();
 })
 
-app.listen(port , () =>{
+app.listen(PORT , () =>{
     console.log("Listening to the port 8080");
 })
