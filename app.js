@@ -30,15 +30,22 @@ app.set("views",path.join(__dirname,"views"));
 app.use(express.static(path.join(__dirname,"/public")));
 const mongo_url = process.env.MONGO_URL;
 
-async function main(){
-   await mongoose.connect(mongo_url);
-}
-
-main().then(() => {
-    console.log("connection successful to db");
-}).catch((err) => {
-    console.log(err);
+mongoose.connect(mongo_url, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
+.then(() => console.log("MongoDB connected"))
+.catch((err) => console.error("MongoDB connection error:", err));
+
+// async function main(){
+//    await mongoose.connect(mongo_url);
+// }
+
+// main().then(() => {
+//     console.log("connection successful to db");
+// }).catch((err) => {
+//     console.log(err);
+// })
 
 const sessionOptions = {
     secret : "mysupersecretcode",
