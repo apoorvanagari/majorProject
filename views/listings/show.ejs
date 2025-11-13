@@ -17,11 +17,11 @@
                         <img src="<%= listing.image[i].url%> " class="card-img-top card-image" alt="listing_image">
                         <form action="/listings/<%= listing._id%>/image/<%= encodeURIComponent(listing.image[i].filename) %>?_method=DELETE" method="POST"  
                         class="position-absolute top-0 end-0 m-2" style="z-index: 1000; pointer-events: auto;">
-                            <button type="submit"
+                            <!-- <button type="submit"
                             class="btn btn-sm btn-danger rounded-circle"
                             style="width: 30px; height: 30px; padding: 0;">
-                            <!-- <i class="fa-regular fa-trash"></i> -->
-                            </button>
+                             <i class="fa-regular fa-trash"></i> -->
+                            <!-- </button> -->
                         </form>
                     </div>
                 <% } %>
